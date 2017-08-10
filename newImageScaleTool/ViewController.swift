@@ -21,6 +21,9 @@ class ViewController: NSViewController,NSOpenSavePanelDelegate,NSTableViewDataSo
     lazy var targetCount = 0
     
     lazy var finishCount = 0
+	
+	let comboBoxSelectItem = 3
+	
     
     @IBOutlet weak var tableview: NSTableView!
 
@@ -37,12 +40,15 @@ class ViewController: NSViewController,NSOpenSavePanelDelegate,NSTableViewDataSo
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()
-        sourceComboBox.selectItem(at: 3)
+        sourceComboBox.selectItem(at: comboBoxSelectItem)
+		checkComboBox_SelectedButton(comboBoxIndex: comboBoxSelectItem)
         directoryText.becomeFirstResponder()
         finishLabel.isHidden = true
         
         tableview.dataSource = self
         tableview.delegate = self
+		
+		tableview.doubleAction = #selector(tableViewDidDoubleClick)
 		// Do any additional setup after loading the view.
 	}
 	
@@ -93,11 +99,12 @@ class ViewController: NSViewController,NSOpenSavePanelDelegate,NSTableViewDataSo
 	}
     
     func removeFileHeaders(path:String) -> String {
-        let fileRange = path.range(of: "file://")
-        if (fileRange?.isEmpty)! {
+		guard let fileRange = path.range(of: "file://") else {return path}
+		
+        if fileRange.isEmpty {
             return path
         }else{
-            return path.substring(from: (fileRange?.upperBound)!)
+            return path.substring(from: fileRange.upperBound)
         }
     }
 	@IBAction func clickSacleImage(_ sender: Any) {
@@ -111,39 +118,53 @@ class ViewController: NSViewController,NSOpenSavePanelDelegate,NSTableViewDataSo
                 }
             }
         }
-        finishCount += 1
+		
         
         finishLabel.isHidden = true
 
         for pathModel in ArrFilePath {
             guard let path = pathModel.fileOriName else { return }
-            self.handleImageWith(path: path)
+			self.handleImageWith(path: path, targetName: pathModel.showTargetName)
+			finishCount += 1
         }
 
 	}
     
-    func handleImageWith(path:String) -> () {
-        guard let image = NSImage(contentsOfFile: directoryText.stringValue) else { return }
-        
+	func handleImageWith(path:String ,targetName tName:String?) -> () {
+        guard let image = NSImage(contentsOfFile: path) else { return }
         
         let size1x = ImageScaleTools.get1xSizeFrom(image: image, sourceRatio: sourceComboBox.indexOfSelectedItem+1)
-        
+        var handleIndex = 0
+		
         for selectView in targetSelectItemsView.subviews {
             if selectView.isKind(of: NSButton.self) {
                 let selectBotton = selectView as! NSButton
                 if selectBotton.state == 1 && selectBotton.isEnabled {
                     guard let newimage = ImageScaleTools.creatScale(image: image, size1x: size1x, scaleRatio: selectView.tag) else { return }
-                    
-                    var pathString = directoryText.stringValue
-                    let OCpathString = (pathString as NSString).deletingPathExtension
-                    pathString = OCpathString as String
-                    pathString += "@\(selectView.tag)x.png"
-                    
-                    ImageScaleTools.save(image: newimage, to: pathString)
+					var pathComponent = ""
+					var pathDirectory = ""
+					if let targetName = tName{
+						pathDirectory = (path as NSString).deletingLastPathComponent
+						pathComponent = "\(targetName)@\(selectView.tag)x.png"
+					}else{
+						pathDirectory = (path as NSString).deletingPathExtension
+						pathComponent = "@\(selectView.tag)x.png"
+					}
+					
+					var pathURL = URL(fileURLWithPath: pathDirectory, isDirectory: true)
+					pathURL.appendPathComponent(pathComponent)
+					
+					
+					
+                    ImageScaleTools.save(image: newimage, to: pathURL.path)
+					handleIndex += 1
+					ArrFilePath[finishCount].progress = "\(handleIndex)/\(targetCount)"
+					let rowIndexSet = NSIndexSet(index: finishCount) as IndexSet
+					let columnIndexSet = NSIndexSet(index: 2) as IndexSet
+					tableview.reloadData(forRowIndexes: rowIndexSet, columnIndexes: columnIndexSet)
                 }
             }
-            
-        }
+		}
     }
     
     func showFinishLabel() -> () {
@@ -156,16 +177,20 @@ class ViewController: NSViewController,NSOpenSavePanelDelegate,NSTableViewDataSo
     }
     
     @IBAction func sourceComboBoxDidSelected(_ sender: NSComboBox) {
-        for selectView in targetSelectItemsView.subviews {
-            if selectView.isKind(of: NSButton.self) {
-                let selectBotton = selectView as! NSButton
-                
-                selectBotton.isEnabled = selectBotton.tag-1<sender.indexOfSelectedItem
-            }
-        }
+		checkComboBox_SelectedButton(comboBoxIndex: sender.indexOfSelectedItem)
     }
-    
-    
+	
+	func checkComboBox_SelectedButton(comboBoxIndex:Int) -> () {
+		for selectView in targetSelectItemsView.subviews {
+			if selectView.isKind(of: NSButton.self) {
+				let selectBotton = selectView as! NSButton
+				
+				selectBotton.isEnabled = selectBotton.tag-1 <= comboBoxIndex
+			}
+		}
+	}
+	
+	
 //MARK:	NSOpenSavePanelDelegate
 //	func panel(_ sender: Any, shouldEnable url: URL) -> Bool {
 //		print(url.absoluteString)
@@ -194,7 +219,21 @@ class ViewController: NSViewController,NSOpenSavePanelDelegate,NSTableViewDataSo
     }
     
 //MARK:	NSTableViewDelegate
-    
-    
+	
+	
+//MARK:	NSTableViewOtherSelecter
+	
+	func tableViewDidDoubleClick(tableview: NSTableView) -> () {
+		print(tableview.clickedColumn)
+		print(tableview.selectedRow)
+		if tableview.clickedColumn == 1 {
+			tableview.editColumn(tableview.selectedColumn, row: tableview.selectedRow, with: nil, select: true)
+		}else{
+			guard let filePath = ArrFilePath[tableview.clickedRow].fileOriName else { return }
+			if FileManager.default.isReadableFile(atPath: filePath) {
+				NSWorkspace.shared().openFile(filePath)
+			}
+		}
+	}
 }
 
