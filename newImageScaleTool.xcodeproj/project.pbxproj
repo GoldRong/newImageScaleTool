@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		FFB67A131F3C226000099EB2 /* ImageScaleTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFB67A121F3C226000099EB2 /* ImageScaleTools.swift */; };
+		FFB67A151F3C3AA200099EB2 /* filePathModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFB67A141F3C3AA200099EB2 /* filePathModel.swift */; };
 		FFE579C81F3B3130008E7B03 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFE579C71F3B3130008E7B03 /* AppDelegate.swift */; };
 		FFE579CA1F3B3130008E7B03 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFE579C91F3B3130008E7B03 /* ViewController.swift */; };
 		FFE579CC1F3B3130008E7B03 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FFE579CB1F3B3130008E7B03 /* Assets.xcassets */; };
@@ -25,6 +27,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		FFB67A121F3C226000099EB2 /* ImageScaleTools.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageScaleTools.swift; sourceTree = "<group>"; };
+		FFB67A141F3C3AA200099EB2 /* filePathModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = filePathModel.swift; sourceTree = "<group>"; };
 		FFE579C41F3B3130008E7B03 /* newImageScaleTool.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = newImageScaleTool.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FFE579C71F3B3130008E7B03 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		FFE579C91F3B3130008E7B03 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -76,10 +80,12 @@
 			isa = PBXGroup;
 			children = (
 				FFE579C71F3B3130008E7B03 /* AppDelegate.swift */,
+				FFE579CD1F3B3130008E7B03 /* Main.storyboard */,
 				FFE579C91F3B3130008E7B03 /* ViewController.swift */,
 				FFE579CB1F3B3130008E7B03 /* Assets.xcassets */,
-				FFE579CD1F3B3130008E7B03 /* Main.storyboard */,
 				FFE579D01F3B3130008E7B03 /* Info.plist */,
+				FFB67A121F3C226000099EB2 /* ImageScaleTools.swift */,
+				FFB67A141F3C3AA200099EB2 /* filePathModel.swift */,
 			);
 			path = newImageScaleTool;
 			sourceTree = "<group>";
@@ -196,6 +202,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				FFE579CA1F3B3130008E7B03 /* ViewController.swift in Sources */,
+				FFB67A131F3C226000099EB2 /* ImageScaleTools.swift in Sources */,
+				FFB67A151F3C3AA200099EB2 /* filePathModel.swift in Sources */,
 				FFE579C81F3B3130008E7B03 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -397,6 +405,7 @@
 				FFE579E01F3B3130008E7B03 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		FFE579E11F3B3130008E7B03 /* Build configuration list for PBXNativeTarget "newImageScaleToolTests" */ = {
 			isa = XCConfigurationList;
@@ -405,6 +414,7 @@
 				FFE579E31F3B3130008E7B03 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
