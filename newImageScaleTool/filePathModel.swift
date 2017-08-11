@@ -39,7 +39,6 @@ class filePathModel:NSObject{
 				ch = ((subfix as NSString).substring(with: NSRange(location: 1, length: 1)) as NSString)
 				if ch == "x" {
 					fileName = fileName.substring(to: scaleRange.lowerBound)
-					fileName += "_"
 				}
 			}
 		}
