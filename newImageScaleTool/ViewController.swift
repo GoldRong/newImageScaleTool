@@ -8,15 +8,22 @@
 
 import Cocoa
 
-class ViewController: NSViewController,NSOpenSavePanelDelegate,NSTableViewDataSource,NSTableViewDelegate
+class ViewController: NSViewController,NSOpenSavePanelDelegate,NSTableViewDataSource,NSTableViewDelegate,NSTextFieldDelegate
 {
     @IBOutlet weak var finishLabel: NSTextField!
     
 	@IBOutlet weak var directoryText: NSTextField!
 	
-    @IBOutlet weak var sourceComboBox: NSComboBox!
+    @IBOutlet weak var targetDirectoryText: NSTextField!
+    
+    @IBOutlet weak var sourceComboBox: NSPopUpButton!
     
     @IBOutlet weak var targetSelectItemsView: NSView!
+    
+    @IBOutlet weak var theadCountCombox: NSPopUpButton!
+    
+    @IBOutlet weak var tableview: NSTableView!
+    
     
     lazy var targetCount = 0
     
@@ -24,39 +31,62 @@ class ViewController: NSViewController,NSOpenSavePanelDelegate,NSTableViewDataSo
 	
 	let comboBoxSelectItem = 3
 	
+    lazy var basePathString = ""
     
-    @IBOutlet weak var tableview: NSTableView!
 
+    lazy var multiThreadingQueue = OperationQueue()
     
-    lazy var ArrFilePath = Array<filePathModel>()
+    lazy var ArrFilePath = Array<filePathModel?>()
     
     
 	lazy var allowedFileTypes  = ["jpg",
 	                              "jpeg",
 	                              "png",
 	                              "bmp",
-	                              "icon",
 	                              "tiff"]
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()
+        
+        sourceComboBox.removeAllItems()
+        for i in 1...9 {
+            sourceComboBox.addItem(withTitle: "@\(i)x")
+        }
         sourceComboBox.selectItem(at: comboBoxSelectItem)
-		checkComboBox_SelectedButton(comboBoxIndex: comboBoxSelectItem)
-        directoryText.becomeFirstResponder()
+        checkComboBox_SelectedButton(comboBoxIndex: comboBoxSelectItem)
+        
+        theadCountCombox.removeAllItems()
+        for i in 1...10 {
+            theadCountCombox.addItem(withTitle: "\(i)")
+        }
+        theadCountCombox.selectItem(at: 2)
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(textFieldDidChange), name: NSNotification.Name.NSControlTextDidChange, object: directoryText)
+        
+        
         finishLabel.isHidden = true
         
-        tableview.dataSource = self
-        tableview.delegate = self
-		
 		tableview.doubleAction = #selector(tableViewDidDoubleClick)
+
 		// Do any additional setup after loading the view.
 	}
+    
+    override func viewDidAppear() {
+        directoryText.becomeFirstResponder()
+    }
 	
 	override var representedObject: Any? {
 		didSet {
 			// Update the view, if already loaded.
 		}
 	}
+    
+    @IBAction func clickClearDirectory(_ sender: Any) {
+        directoryText.stringValue = ""
+        targetDirectoryText.stringValue = ""
+        ArrFilePath.removeAll()
+        tableview.reloadData()
+    }
 	
 	@IBAction func clickOpenDirectory_File(_ sender: NSButton) {
         ArrFilePath.removeAll()
@@ -69,34 +99,33 @@ class ViewController: NSViewController,NSOpenSavePanelDelegate,NSTableViewDataSo
 		openPanel.allowedFileTypes = allowedFileTypes
 		openPanel.delegate = self
 		if openPanel.runModal() == NSModalResponseOK {
-            guard let url = openPanel.url else {return}
-            let pathStr = removeFileHeaders(path: url.path)
-            print(pathStr)
-            let fm = FileManager.default
-            
-            var isDirectory:ObjCBool = false
-            
-            if fm.fileExists(atPath: pathStr, isDirectory: &isDirectory) {
-                if isDirectory.boolValue {
-                    guard let paths = fm.subpaths(atPath: pathStr) else { return }
-                    for path in paths {
-                        for ext in allowedFileTypes {
-                            if (path as NSString).pathExtension == ext{
-                                let fullPath = (pathStr as NSString).appendingPathComponent(path)
-                                ArrFilePath.append(filePathModel(fileOriName: fullPath, fileTargetName: fullPath, progress: ""))
-                            }
-                        }
-                    }
-                }else{
-                    directoryText.stringValue = pathStr
-                    ArrFilePath.append(filePathModel(fileOriName: pathStr, fileTargetName: pathStr, progress: ""))
+            let urls = openPanel.urls
+            if urls.count == 1 {
+                let pathStr = removeFileHeaders(path: urls[0].path)
+                
+                let _ = applyDirectoryText(pathStr: pathStr)
+                directoryText.stringValue = pathStr
+            }else{
+                for url in urls {
+                    let pathStr = removeFileHeaders(path: url.path)
+
+                    directoryText.stringValue = applyDirectoryText(pathStr: pathStr)
                 }
             }
+
             tableview.reloadData()
-
-
 		}
 	}
+    
+    func applyDirectoryText(pathStr:String) -> (String) {
+        datasourceAdd(pathStr: pathStr)
+        
+        let basePath = getFileBasePath(filePath: pathStr)
+        
+        targetDirectoryText.stringValue = URL(fileURLWithPath: basePath).appendingPathComponent("iOS", isDirectory: true).path
+        basePathString = basePath
+        return basePath
+    }
     
     func removeFileHeaders(path:String) -> String {
 		guard let fileRange = path.range(of: "file://") else {return path}
@@ -107,9 +136,62 @@ class ViewController: NSViewController,NSOpenSavePanelDelegate,NSTableViewDataSo
             return path.substring(from: fileRange.upperBound)
         }
     }
+    
+    func getFileBasePath(filePath:String) -> String {
+        
+
+        if FileManager.default.fileExists(atPath: filePath, isDirectory: nil) {
+            return (filePath as NSString).deletingLastPathComponent
+        }
+        
+        return ""
+        
+    }
+    
+    func datasourceAdd(pathStr:String)->(){
+        let fm = FileManager.default
+        
+        var isDirectory:ObjCBool = false
+        
+        if fm.fileExists(atPath: pathStr, isDirectory: &isDirectory) {
+            if isDirectory.boolValue {
+                guard let paths = fm.subpaths(atPath: pathStr) else { return }
+                for path in paths {
+                    for ext in allowedFileTypes {
+                        if (path as NSString).pathExtension == ext{
+                            let fullPath = (pathStr as NSString).appendingPathComponent(path)
+                            ArrFilePath.append(filePathModel(fileOriName: fullPath, fileTargetName: fullPath, progress: ""))
+                        }
+                    }
+                }
+            }else{
+                ArrFilePath.append(filePathModel(fileOriName: pathStr, fileTargetName: pathStr, progress: ""))
+            }
+        }
+
+    }
+    
+    @IBAction func clickOpenTargetDirectory(_ sender: NSButton) {
+        let openPanel = NSOpenPanel()
+        openPanel.canChooseDirectories = true
+        openPanel.allowsOtherFileTypes = false
+        openPanel.allowsMultipleSelection = true
+        openPanel.showsHiddenFiles = true
+        if openPanel.runModal() == NSModalResponseOK {
+            guard let url = openPanel.url else { return }
+            let pathStr = removeFileHeaders(path: url.path)
+            targetDirectoryText.stringValue = pathStr
+        }
+    }
+
+    
 	@IBAction func clickSacleImage(_ sender: Any) {
         targetCount = 0
         finishCount = 0
+        
+        let theadCount = theadCountCombox.indexOfSelectedItem+1
+        multiThreadingQueue.maxConcurrentOperationCount = theadCount
+        
         for selectView in targetSelectItemsView.subviews {
             if selectView.isKind(of: NSButton.self) {
                 let selectBotton = selectView as! NSButton
@@ -118,16 +200,26 @@ class ViewController: NSViewController,NSOpenSavePanelDelegate,NSTableViewDataSo
                 }
             }
         }
-		
         
         finishLabel.isHidden = true
-
-        for pathModel in ArrFilePath {
-            guard let path = pathModel.fileOriName else { return }
-			self.handleImageWith(path: path, targetName: pathModel.showTargetName)
-			finishCount += 1
+        
+        let finishOP = BlockOperation { 
+            OperationQueue.main.addOperation({
+                self.showFinishLabel()
+            })
         }
 
+        for pathModel in ArrFilePath {
+            guard let pathModel = pathModel else {return}
+            let op = BlockOperation {
+                guard let path = pathModel.fileOriName else { return }
+                self.handleImageWith(path: path, targetName: pathModel.showTargetName)
+                self.finishCount += 1
+            }
+            finishOP.addDependency(op)
+            multiThreadingQueue.addOperation(op)
+        }
+        multiThreadingQueue.addOperation(finishOP)
 	}
     
 	func handleImageWith(path:String ,targetName tName:String?) -> () {
@@ -150,18 +242,46 @@ class ViewController: NSViewController,NSOpenSavePanelDelegate,NSTableViewDataSo
 						pathDirectory = (path as NSString).deletingPathExtension
 						pathComponent = "@\(selectView.tag)x.png"
 					}
-					
-					var pathURL = URL(fileURLWithPath: pathDirectory, isDirectory: true)
+
+                    var targetBasePath = ""
+                    
+                    var targetDirectoryNotExists = true
+                    
+                    let fm = FileManager.default
+                    
+                    var isDirectory:ObjCBool = true
+                    
+                    if fm.fileExists(atPath: targetDirectoryText.stringValue, isDirectory: &isDirectory) {
+                        if isDirectory.boolValue {
+                            targetBasePath = targetDirectoryText.stringValue
+                            targetDirectoryNotExists = false
+                        }
+                    }
+                    if targetDirectoryNotExists {
+                        targetBasePath = targetDirectoryText.stringValue
+                        guard let _ = try? fm.createDirectory(atPath: targetBasePath, withIntermediateDirectories: true, attributes: nil) else { return }
+                    }
+                    if let range = pathDirectory.range(of: basePathString) {
+                        pathDirectory = pathDirectory.substring(from: range.upperBound)
+                    }
+                    
+					var pathURL = URL(fileURLWithPath: targetBasePath, isDirectory: true, relativeTo: nil)
+
+                    pathURL.appendPathComponent(pathDirectory)
+                    guard let _ = try? fm.createDirectory(at: pathURL, withIntermediateDirectories: true, attributes: nil) else { return }
+                    
+                    
 					pathURL.appendPathComponent(pathComponent)
-					
-					
 					
                     ImageScaleTools.save(image: newimage, to: pathURL.path)
 					handleIndex += 1
-					ArrFilePath[finishCount].progress = "\(handleIndex)/\(targetCount)"
+					ArrFilePath[finishCount]?.progress = "\(handleIndex)/\(targetCount)"
 					let rowIndexSet = NSIndexSet(index: finishCount) as IndexSet
 					let columnIndexSet = NSIndexSet(index: 2) as IndexSet
-					tableview.reloadData(forRowIndexes: rowIndexSet, columnIndexes: columnIndexSet)
+                    
+                    OperationQueue.main.addOperation({ 
+                        self.tableview.reloadData(forRowIndexes: rowIndexSet, columnIndexes: columnIndexSet)
+                    })
                 }
             }
 		}
@@ -176,7 +296,7 @@ class ViewController: NSViewController,NSOpenSavePanelDelegate,NSTableViewDataSo
         }, completionHandler: nil)
     }
     
-    @IBAction func sourceComboBoxDidSelected(_ sender: NSComboBox) {
+    @IBAction func sourceComboBoxDidSelected(_ sender: NSPopUpButton) {
 		checkComboBox_SelectedButton(comboBoxIndex: sender.indexOfSelectedItem)
     }
 	
@@ -218,22 +338,53 @@ class ViewController: NSViewController,NSOpenSavePanelDelegate,NSTableViewDataSo
         return ArrFilePath[row]
     }
     
+    
+//MARK:	TextFieldSelector
+    func textFieldDidChange(noti: NSNotification) -> () {
+        let textField = noti.object as! NSTextField
+        if textField == directoryText! {
+            if FileManager.default.fileExists(atPath: directoryText.stringValue, isDirectory: nil) {
+                ArrFilePath.removeAll()
+                let _ = applyDirectoryText(pathStr: textField.stringValue)
+                tableview.reloadData()
+            }
+        }
+       
+        
+    }
+    
 //MARK:	NSTableViewDelegate
-	
+    func control(_ control: NSControl, textShouldEndEditing fieldEditor: NSText) -> Bool {
+        guard let text = fieldEditor.string else {print("false"); return true}
+        
+        if control == directoryText! {
+            
+        }else{
+            if text == "" {
+                return false
+            }
+            
+            ArrFilePath[tableview.selectedRow]?.showTargetName = text
+        }
+
+        return true
+    }
 	
 //MARK:	NSTableViewOtherSelecter
-	
+
 	func tableViewDidDoubleClick(tableview: NSTableView) -> () {
-		print(tableview.clickedColumn)
-		print(tableview.selectedRow)
 		if tableview.clickedColumn == 1 {
+            
 			tableview.editColumn(tableview.selectedColumn, row: tableview.selectedRow, with: nil, select: true)
 		}else{
-			guard let filePath = ArrFilePath[tableview.clickedRow].fileOriName else { return }
+			guard let filePath = ArrFilePath[tableview.clickedRow]?.fileOriName else { return }
 			if FileManager.default.isReadableFile(atPath: filePath) {
 				NSWorkspace.shared().openFile(filePath)
 			}
 		}
 	}
+    
+//MARK:	NSTextFieldDelegate
+
 }
 
