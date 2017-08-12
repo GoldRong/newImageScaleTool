@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		FF08BCC81F3E8BCE008D620E /* pngquant in Resources */ = {isa = PBXBuildFile; fileRef = FF08BCC71F3E8BCE008D620E /* pngquant */; };
+		FF08BCCB1F3E8FB4008D620E /* pngquantTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF08BCCA1F3E8FB4008D620E /* pngquantTool.swift */; };
 		FFB67A131F3C226000099EB2 /* ImageScaleTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFB67A121F3C226000099EB2 /* ImageScaleTools.swift */; };
 		FFB67A151F3C3AA200099EB2 /* filePathModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFB67A141F3C3AA200099EB2 /* filePathModel.swift */; };
 		FFE579C81F3B3130008E7B03 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFE579C71F3B3130008E7B03 /* AppDelegate.swift */; };
@@ -27,6 +29,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		FF08BCC71F3E8BCE008D620E /* pngquant */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = pngquant; sourceTree = "<group>"; };
+		FF08BCCA1F3E8FB4008D620E /* pngquantTool.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = pngquantTool.swift; sourceTree = "<group>"; };
 		FFB67A121F3C226000099EB2 /* ImageScaleTools.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageScaleTools.swift; sourceTree = "<group>"; };
 		FFB67A141F3C3AA200099EB2 /* filePathModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = filePathModel.swift; sourceTree = "<group>"; };
 		FFE579C41F3B3130008E7B03 /* newImageScaleTool.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = newImageScaleTool.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -58,6 +62,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		FF08BCC91F3E8BD3008D620E /* lib */ = {
+			isa = PBXGroup;
+			children = (
+				FF08BCC71F3E8BCE008D620E /* pngquant */,
+				FF08BCCA1F3E8FB4008D620E /* pngquantTool.swift */,
+			);
+			name = lib;
+			sourceTree = "<group>";
+		};
 		FFE579BB1F3B3130008E7B03 = {
 			isa = PBXGroup;
 			children = (
@@ -79,6 +92,7 @@
 		FFE579C61F3B3130008E7B03 /* newImageScaleTool */ = {
 			isa = PBXGroup;
 			children = (
+				FF08BCC91F3E8BD3008D620E /* lib */,
 				FFE579C71F3B3130008E7B03 /* AppDelegate.swift */,
 				FFE579CD1F3B3130008E7B03 /* Main.storyboard */,
 				FFE579C91F3B3130008E7B03 /* ViewController.swift */,
@@ -182,6 +196,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FF08BCC81F3E8BCE008D620E /* pngquant in Resources */,
 				FFE579CC1F3B3130008E7B03 /* Assets.xcassets in Resources */,
 				FFE579CF1F3B3130008E7B03 /* Main.storyboard in Resources */,
 			);
@@ -202,6 +217,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FFE579CA1F3B3130008E7B03 /* ViewController.swift in Sources */,
+				FF08BCCB1F3E8FB4008D620E /* pngquantTool.swift in Sources */,
 				FFB67A131F3C226000099EB2 /* ImageScaleTools.swift in Sources */,
 				FFB67A151F3C3AA200099EB2 /* filePathModel.swift in Sources */,
 				FFE579C81F3B3130008E7B03 /* AppDelegate.swift in Sources */,

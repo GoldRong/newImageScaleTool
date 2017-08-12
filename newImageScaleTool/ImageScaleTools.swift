@@ -105,4 +105,8 @@ class ImageScaleTools: NSObject {
             alert.beginSheetModal(for: NSApplication.shared().keyWindow!, completionHandler: nil)
         }
     }
+    
+
+    
+
 }

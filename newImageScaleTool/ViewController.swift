@@ -25,6 +25,14 @@ class ViewController: NSViewController,NSOpenSavePanelDelegate,NSTableViewDataSo
     @IBOutlet weak var tableview: NSTableView!
     
     
+    @IBOutlet weak var enablePNGZipButton: NSButton!
+    
+    @IBOutlet weak var PNGZipComboBox: NSPopUpButton!
+
+
+    @IBOutlet weak var saveConfigButton: NSButton!
+    
+    
     lazy var targetCount = 0
     
     lazy var finishCount = 0
@@ -60,6 +68,13 @@ class ViewController: NSViewController,NSOpenSavePanelDelegate,NSTableViewDataSo
             theadCountCombox.addItem(withTitle: "\(i)")
         }
         theadCountCombox.selectItem(at: 2)
+        
+        PNGZipComboBox.removeAllItems()
+        PNGZipComboBox.addItem(withTitle: "低")
+        PNGZipComboBox.addItem(withTitle: "中")
+        PNGZipComboBox.addItem(withTitle: "高")
+        PNGZipComboBox.addItem(withTitle: "自适应")
+        PNGZipComboBox.selectItem(at: 3)
         
         NotificationCenter.default.addObserver(self, selector: #selector(textFieldDidChange), name: NSNotification.Name.NSControlTextDidChange, object: directoryText)
         
@@ -233,14 +248,14 @@ class ViewController: NSViewController,NSOpenSavePanelDelegate,NSTableViewDataSo
                 let selectBotton = selectView as! NSButton
                 if selectBotton.state == 1 && selectBotton.isEnabled {
                     guard let newimage = ImageScaleTools.creatScale(image: image, size1x: size1x, scaleRatio: selectView.tag) else { return }
-					var pathComponent = ""
+					var oriImageName = ""
 					var pathDirectory = ""
 					if let targetName = tName{
 						pathDirectory = (path as NSString).deletingLastPathComponent
-						pathComponent = "\(targetName)@\(selectView.tag)x.png"
+						oriImageName = "\(targetName)@\(selectView.tag)x.png"
 					}else{
 						pathDirectory = (path as NSString).deletingPathExtension
-						pathComponent = "@\(selectView.tag)x.png"
+						oriImageName = "@\(selectView.tag)x.png"
 					}
 
                     var targetBasePath = ""
@@ -271,9 +286,45 @@ class ViewController: NSViewController,NSOpenSavePanelDelegate,NSTableViewDataSo
                     guard let _ = try? fm.createDirectory(at: pathURL, withIntermediateDirectories: true, attributes: nil) else { return }
                     
                     
-					pathURL.appendPathComponent(pathComponent)
+					pathURL.appendPathComponent(oriImageName)
+                    
+                    let oriImagePath = pathURL.path
 					
-                    ImageScaleTools.save(image: newimage, to: pathURL.path)
+                    ImageScaleTools.save(image: newimage, to: oriImagePath)
+                    
+                    
+                    //MARK:	压缩图片
+                    if enablePNGZipButton.state == 1 {
+                        let newImageNames = ["-fs8","-or8"]
+                        
+                        var zipLevel = "50-100"
+                        
+                        switch PNGZipComboBox.indexOfSelectedItem {
+                        case 0://低
+                            zipLevel = "75-100"
+                        case 1://中
+                            zipLevel = "50-75"
+                        case 2://高
+                            zipLevel = "25-50"
+                        case 2://自适应
+                            zipLevel = "0-100"
+                        default:
+                            break
+                        }
+                        
+                        pngquantTool.convertImage(path: oriImagePath, arguments: ["--quality=\(zipLevel)"])
+                        
+                        try? fm.removeItem(atPath: oriImagePath)
+                        
+                        pathURL.deletePathExtension()
+                        for subfix in newImageNames {
+                            let newImagePath = pathURL.path + subfix + ".png"
+                            try? fm.moveItem(atPath: newImagePath, toPath: oriImagePath)
+                        }
+                    }
+                    
+                    
+                    
 					handleIndex += 1
 					ArrFilePath[finishCount]?.progress = "\(handleIndex)/\(targetCount)"
 					let rowIndexSet = NSIndexSet(index: finishCount) as IndexSet
@@ -286,6 +337,8 @@ class ViewController: NSViewController,NSOpenSavePanelDelegate,NSTableViewDataSo
             }
 		}
     }
+    
+
     
     func showFinishLabel() -> () {
         finishLabel.alphaValue = 0;
@@ -309,6 +362,10 @@ class ViewController: NSViewController,NSOpenSavePanelDelegate,NSTableViewDataSo
 			}
 		}
 	}
+    
+    
+    @IBAction func clickSaveConfig(_ sender: NSButton) {
+    }
 	
 	
 //MARK:	NSOpenSavePanelDelegate
