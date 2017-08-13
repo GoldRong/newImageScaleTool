@@ -53,6 +53,19 @@ class ViewController: NSViewController,NSOpenSavePanelDelegate,NSTableViewDataSo
 	                              "bmp",
 	                              "tiff"]
 	
+	enum PNGZipOptionLevel:Int {
+		case low	= 0
+		case mid	= 1
+		case high	= 2
+		case auto	= 3
+	}
+
+	lazy var PNGZipOption  = ["低",
+							  "中",
+							  "高",
+							  "自适应"]
+
+	
 	override func viewDidLoad() {
 		super.viewDidLoad()
         
@@ -70,11 +83,10 @@ class ViewController: NSViewController,NSOpenSavePanelDelegate,NSTableViewDataSo
         theadCountCombox.selectItem(at: 2)
         
         PNGZipComboBox.removeAllItems()
-        PNGZipComboBox.addItem(withTitle: "低")
-        PNGZipComboBox.addItem(withTitle: "中")
-        PNGZipComboBox.addItem(withTitle: "高")
-        PNGZipComboBox.addItem(withTitle: "自适应")
-        PNGZipComboBox.selectItem(at: 3)
+		for i in 0...PNGZipOptionLevel.auto.rawValue {
+			PNGZipComboBox.addItem(withTitle: PNGZipOption[i])
+		}
+        PNGZipComboBox.selectItem(at: PNGZipOptionLevel.auto.rawValue)
         
         NotificationCenter.default.addObserver(self, selector: #selector(textFieldDidChange), name: NSNotification.Name.NSControlTextDidChange, object: directoryText)
         
@@ -84,6 +96,8 @@ class ViewController: NSViewController,NSOpenSavePanelDelegate,NSTableViewDataSo
 		tableview.doubleAction = #selector(tableViewDidDoubleClick)
 
 		// Do any additional setup after loading the view.
+		
+		loadConfig()
 	}
     
     override func viewDidAppear() {
@@ -95,8 +109,9 @@ class ViewController: NSViewController,NSOpenSavePanelDelegate,NSTableViewDataSo
 			// Update the view, if already loaded.
 		}
 	}
-    
+	
     @IBAction func clickClearDirectory(_ sender: Any) {
+		//MARK:	清除地址栏
         directoryText.stringValue = ""
         targetDirectoryText.stringValue = ""
         ArrFilePath.removeAll()
@@ -104,6 +119,7 @@ class ViewController: NSViewController,NSOpenSavePanelDelegate,NSTableViewDataSo
     }
 	
 	@IBAction func clickOpenDirectory_File(_ sender: NSButton) {
+		//MARK:	打开路径选择器
         ArrFilePath.removeAll()
 		let openPanel = NSOpenPanel()
 		openPanel.canChooseFiles = true
@@ -185,8 +201,9 @@ class ViewController: NSViewController,NSOpenSavePanelDelegate,NSTableViewDataSo
         }
 
     }
-    
+	
     @IBAction func clickOpenTargetDirectory(_ sender: NSButton) {
+		//MARK:	选择保存路径
         let openPanel = NSOpenPanel()
         openPanel.canChooseDirectories = true
         openPanel.allowsOtherFileTypes = false
@@ -199,8 +216,9 @@ class ViewController: NSViewController,NSOpenSavePanelDelegate,NSTableViewDataSo
         }
     }
 
-    
+	
 	@IBAction func clickSacleImage(_ sender: Any) {
+		//MARK:	开始缩放
         targetCount = 0
         finishCount = 0
         
@@ -299,17 +317,15 @@ class ViewController: NSViewController,NSOpenSavePanelDelegate,NSTableViewDataSo
                         
                         var zipLevel = "50-100"
                         
-                        switch PNGZipComboBox.indexOfSelectedItem {
-                        case 0://低
+                        switch PNGZipOptionLevel(rawValue: PNGZipComboBox.indexOfSelectedItem) ?? .auto  {
+                        case .low://低
                             zipLevel = "75-100"
-                        case 1://中
+                        case .mid://中
                             zipLevel = "50-75"
-                        case 2://高
+                        case .high://高
                             zipLevel = "25-50"
-                        case 2://自适应
+                        case .auto://自适应
                             zipLevel = "0-100"
-                        default:
-                            break
                         }
                         
                         pngquantTool.convertImage(path: oriImagePath, arguments: ["--quality=\(zipLevel)"])
@@ -363,9 +379,59 @@ class ViewController: NSViewController,NSOpenSavePanelDelegate,NSTableViewDataSo
 		}
 	}
     
-    
+	
     @IBAction func clickSaveConfig(_ sender: NSButton) {
+		//MARK:	保存设置的Action
+
+		saveConfig()
     }
+	
+	func saveConfig() {
+		let uds = UserDefaults.standard;
+		uds.set(targetDirectoryText.stringValue, forKey: "targetDirectoryText")
+		uds.set(sourceComboBox.indexOfSelectedItem, forKey: "sourceComboBox")
+		
+		for selectView in targetSelectItemsView.subviews {
+			let selectButton = selectView as! NSButton
+			uds.set(selectButton.state, forKey: "targetSelectItemsView\(selectButton.tag)")
+		}
+		
+		uds.set(theadCountCombox.indexOfSelectedItem, forKey: "theadCountCombox")
+		uds.set(enablePNGZipButton.isEnabled, forKey: "enablePNGZipButton")
+		uds.set(PNGZipComboBox.indexOfSelectedItem, forKey: "PNGZipComboBox")
+	}
+	func loadConfig() {
+//		return
+		let uds = UserDefaults.standard;
+		
+		if let obj = uds.object(forKey: "targetDirectoryText") {
+			targetDirectoryText.stringValue = obj as! String
+		}
+		
+		
+		if let obj = uds.object(forKey: "sourceComboBox") {
+			sourceComboBox.selectItem(at: obj as! Int)
+		}
+		
+		
+		for selectView in targetSelectItemsView.subviews {
+			let selectButton = selectView as! NSButton
+			if let obj = uds.object(forKey: "targetSelectItemsView\(selectButton.tag)") {
+				sourceComboBox.selectItem(at: obj as! Int)
+				selectButton.state = obj as! Int
+			}
+		}
+		
+		if let obj = uds.object(forKey: "theadCountCombox") {
+			theadCountCombox.selectItem(at: obj as! Int)
+		}
+		
+		enablePNGZipButton.isEnabled = (uds.object(forKey: "enablePNGZipButton") != nil)
+		if let obj = uds.object(forKey: "PNGZipComboBox") {
+			PNGZipComboBox.selectItem(at: obj as! Int)
+		}
+		
+	}
 	
 	
 //MARK:	NSOpenSavePanelDelegate

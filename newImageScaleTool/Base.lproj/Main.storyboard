@@ -1076,12 +1076,12 @@
                                     </menu>
                                 </popUpButtonCell>
                             </popUpButton>
-                            <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="FYD-b5-ZNg">
-                                <rect key="frame" x="120" y="108" width="76" height="18"/>
+                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="FYD-b5-ZNg">
+                                <rect key="frame" x="364" y="13" width="84" height="32"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <buttonCell key="cell" type="check" title="记忆设置" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="2eW-pK-VTO">
-                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                                    <font key="font" size="13" name=".PingFangSC-Regular"/>
+                                <buttonCell key="cell" type="push" title="记忆设置" bezelStyle="rounded" alignment="center" state="on" borderStyle="border" inset="2" id="2eW-pK-VTO">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
                                 </buttonCell>
                                 <connections>
                                     <action selector="clickSaveConfig:" target="XfG-lQ-9wD" id="xoo-xj-m2x"/>
